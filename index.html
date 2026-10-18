@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14532d">
+<title>IR_Mech</title>
+<style>
+  :root{
+    --bg:#f3f6f4; --card:#ffffff; --ink:#15211a; --muted:#66756c; --line:#e2e8e4;
+    --brand:#15803d; --brand2:#0f5f2e; --brandSoft:#e7f5ec; --accent:#f59e0b;
+    --ok:#15803d; --warn:#b45309; --err:#b91c1c; --wait:#6b7280;
+    --shadow:0 1px 2px rgba(16,40,24,.06),0 6px 20px rgba(16,40,24,.07);
+    --r:18px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0d1511; --card:#16211b; --ink:#e7efe9; --muted:#93a39a; --line:#26342c;
+      --brand:#22c55e; --brand2:#16a34a; --brandSoft:#163222; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35); }
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Roboto,"Segoe UI",system-ui,-apple-system,sans-serif}
+  body{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+  button{font:inherit;color:inherit}
+  header{position:relative;color:#fff;padding:calc(18px + env(safe-area-inset-top)) 18px 26px;
+    background:radial-gradient(120% 140% at 100% 0%,#22c55e 0%,#15803d 45%,#0b3d20 100%);
+    border-radius:0 0 26px 26px;box-shadow:0 10px 30px rgba(11,61,32,.25);overflow:hidden}
+  header::after{content:"";position:absolute;right:-40px;top:-40px;width:180px;height:180px;border-radius:50%;
+    background:rgba(255,255,255,.08)}
+  header h1{margin:0;font-size:26px;letter-spacing:.3px}
+  header p{margin:6px 0 0;opacity:.9;font-size:13.5px;line-height:1.45;max-width:520px}
+  .owner{display:inline-flex;align-items:center;gap:10px;margin-top:14px;background:rgba(255,255,255,.14);
+    padding:7px 12px 7px 7px;border-radius:999px;backdrop-filter:blur(4px)}
+  .owner .av{width:30px;height:30px;border-radius:50%;background:#fff;color:#15803d;display:grid;place-items:center;font-weight:800;font-size:13px}
+  .owner b{display:block;font-size:13px}.owner small{display:block;font-size:11px;opacity:.85}
+  .net{position:absolute;right:16px;top:calc(16px + env(safe-area-inset-top));font-size:11.5px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.18)}
+  main{padding:14px 14px 0;max-width:720px;margin:0 auto}
+  .card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin-bottom:14px;animation:up .35s ease both}
+  @keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .step{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .num{width:28px;height:28px;border-radius:50%;background:var(--brandSoft);color:var(--brand);display:grid;place-items:center;font-weight:800;font-size:14px;flex:none}
+  .step h2{margin:0;font-size:15.5px;letter-spacing:.3px}
+  .step .req{color:var(--err);margin-left:2px}
+  .hint{color:var(--muted);font-size:12.5px;margin:-4px 0 10px}
+  .row{display:flex;gap:8px}
+  input[type=text],input[type=url],input[type=password]{width:100%;font:inherit;font-size:16px;padding:13px 14px;border-radius:13px;
+    border:1.5px solid var(--line);background:transparent;color:var(--ink);outline:none;transition:border .2s}
+  input:focus{border-color:var(--brand)}
+  .btn{border:0;border-radius:13px;padding:12px 16px;font-weight:700;background:var(--brand);color:#fff;cursor:pointer;transition:transform .1s, filter .2s}
+  .btn:active{transform:scale(.97)} .btn.ghost{background:var(--brandSoft);color:var(--brand)}
+  .btn.block{width:100%;padding:16px;font-size:16px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:9px 13px;border-radius:999px;border:1.5px solid var(--line);
+    background:var(--card);font-size:14px;cursor:pointer;transition:all .18s;user-select:none}
+  .chip.on{background:var(--brand);border-color:var(--brand);color:#fff;box-shadow:0 4px 12px rgba(21,128,61,.25)}
+  .chip .x{opacity:.8;font-weight:700}
+  .villa{background:var(--brandSoft);border-color:transparent;color:var(--brand);font-weight:700}
+  .search{margin-bottom:10px}
+  .grp{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin:14px 2px 8px}
+  .item{border:1.5px solid var(--line);border-radius:14px;padding:12px 12px;margin-bottom:8px;cursor:pointer;transition:all .18s;background:var(--card)}
+  .item .t{display:flex;align-items:center;gap:10px;font-size:14.5px}
+  .tick{width:22px;height:22px;border-radius:7px;border:2px solid var(--line);flex:none;display:grid;place-items:center;transition:all .18s}
+  .item.on{border-color:var(--brand);background:var(--brandSoft)}
+  .item.on .tick{background:var(--brand);border-color:var(--brand)}
+  .item.on .tick::after{content:"";width:6px;height:11px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
+  .floors{display:none;margin:10px 0 2px 32px}
+  .item.on .floors{display:flex}
+  .floors .chip{padding:6px 11px;font-size:13px}
+  .floors .need{font-size:12px;color:var(--err);align-self:center}
+  .tag{font-size:11px;color:var(--muted);margin-left:auto;white-space:nowrap}
+  .rtl{direction:rtl}
+  .sum{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .big{font-size:30px;font-weight:800;color:var(--brand);line-height:1}
+  .preview{max-height:38vh;overflow:auto;margin-top:10px;border-top:1px dashed var(--line);padding-top:8px}
+  .preview div{font-size:13px;padding:5px 0;border-bottom:1px solid var(--line);display:flex;gap:8px}
+  .preview b{min-width:58px;color:var(--brand)}
+  nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);box-shadow:0 -6px 24px rgba(0,0,0,.08);
+    display:flex;justify-content:space-around;padding:8px 6px calc(8px + env(safe-area-inset-bottom));z-index:5}
+  nav button{flex:1;border:0;background:none;padding:6px 0;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;color:var(--muted);cursor:pointer}
+  nav button svg{width:24px;height:24px}
+  nav button.on{color:var(--brand);font-weight:700}
+  .badge{position:relative}.badge i{position:absolute;top:-4px;right:-10px;background:var(--accent);color:#fff;font-style:normal;font-size:10px;border-radius:999px;padding:1px 5px}
+  .page{display:none}.page.on{display:block}
+  .h{display:flex;align-items:center;justify-content:space-between;margin:4px 2px 12px}
+  .h h2{margin:0;font-size:18px}
+  .hist{padding:12px 14px;margin-bottom:10px;animation:none}
+  .hist .top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+  .st{font-size:11.5px;font-weight:800;padding:4px 9px;border-radius:999px;white-space:nowrap}
+  .st.ok{background:#dcfce7;color:#166534}.st.warn{background:#fef3c7;color:#92400e}.st.err{background:#fee2e2;color:#991b1b}.st.wait{background:#eef0f2;color:#4b5563}
+  @media (prefers-color-scheme: dark){.st.ok{background:#14361f;color:#86efac}.st.warn{background:#3a2a0b;color:#fcd34d}.st.err{background:#3b1414;color:#fca5a5}.st.wait{background:#252b29;color:#cbd5d0}}
+  .hist .ty{font-size:13.5px;margin:6px 0 4px}.hist .meta{font-size:12px;color:var(--muted)}
+  .empty{text-align:center;color:var(--muted);padding:40px 10px}
+  label.f{display:block;font-size:13px;font-weight:700;margin:12px 2px 6px}
+  .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);opacity:0;
+    background:#0f2a1a;color:#fff;padding:12px 18px;border-radius:14px;font-size:14px;transition:all .3s;z-index:9;max-width:90vw;text-align:center}
+  .toast.show{opacity:1;transform:translateX(-50%)}
+  .spin{width:18px;height:18px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp 0.8s linear infinite;display:inline-block;vertical-align:-4px;margin-right:8px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .done{text-align:center;padding:26px 10px}
+  .done .ck{width:74px;height:74px;border-radius:50%;background:var(--brand);margin:0 auto 14px;display:grid;place-items:center;animation:pop .45s cubic-bezier(.2,1.6,.4,1) both}
+  .done .ck::after{content:"";width:18px;height:34px;border:solid #fff;border-width:0 5px 5px 0;transform:rotate(45deg) translate(-3px,-4px)}
+  @keyframes pop{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}
+  .small{font-size:12px;color:var(--muted)}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20;display:flex;align-items:flex-end;animation:fade .2s}
+  .modal .sheet{background:var(--card);width:100%;border-radius:22px 22px 0 0;padding:22px 18px calc(18px + env(safe-area-inset-bottom));animation:up .3s ease}
+  @keyframes fade{from{opacity:0}}
+  .sticky{position:sticky;bottom:calc(76px + env(safe-area-inset-bottom));z-index:4}
+</style>
+
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="IR Mech">
+</head>
+<body>
+<header>
+  <span class="net" id="net">online</span>
+  <h1 id="title">IR_Mech</h1>
+  <p id="subtitle">Submit your Finished Works and it will be sent automatically.</p>
+  <div class="owner"><span class="av" id="ownerAv">AA</span><span><b id="owner">Abdullah Aboelhamd</b><small id="ownerTitle">Mechanical Technical Office Engineer</small></span></div>
+</header>
+
+<main>
+  <!-- ======================= NEW ======================= -->
+  <section class="page on" id="p-new">
+    <div class="card" id="setupCard" style="display:none">
+      <div class="step"><span class="num">!</span><h2>First time</h2></div>
+      <p class="hint">Open <b>Settings</b> and paste the server link you got from the office.</p>
+      <button class="btn ghost" onclick="go('set')">Open Settings</button>
+    </div>
+
+    <div class="card">
+      <div class="step"><span class="num">1</span><h2>VILLA NUMBER<span class="req">*</span></h2></div>
+      <p class="hint">One or more villas (e.g. <b>85, 86</b> or <b>10-15</b>). Each villa = its own IR. S-type villas go with their pair automatically (46 → 46 &amp; 47).</p>
+      <div class="row"><input type="text" id="villaIn" inputmode="text" placeholder="e.g. 85, 86, 10-15" autocomplete="off">
+        <button class="btn" onclick="addVillas()">Add</button></div>
+      <div class="chips" id="villas" style="margin-top:10px"></div>
+    </div>
+
+    <div class="card">
+      <div class="step"><span class="num">2</span><h2>IR TYPE<span class="req">*</span></h2></div>
+      <p class="hint">Tick every work that is finished. Pick the floor(s) where it asks.</p>
+      <input type="text" class="search" id="q" placeholder="Search…" oninput="renderTypes()">
+      <div id="types"></div>
+    </div>
+
+    <div class="card">
+      <div class="step"><span class="num">3</span><h2>Who did this work?<span class="req">*</span></h2></div>
+      <div class="chips rtl" id="who"></div>
+    </div>
+
+    <div class="card">
+      <div class="step"><span class="num">4</span><h2>Weight of work done<span class="req">*</span></h2></div>
+      <div class="chips" id="weight"></div>
+    </div>
+
+    <div class="card sticky" id="sumCard">
+      <div class="sum">
+        <div><div class="big" id="count">0</div><div class="small" id="countTxt">IR requests ready</div>
+          <a href="#" class="small" id="pvToggle" style="color:var(--brand);font-weight:700;display:none" onclick="st.showPrev=!st.showPrev;update();return false">Show list</a></div>
+        <button class="btn" id="sendBtn" onclick="send()" style="padding:15px 22px;font-size:16px">Send</button>
+      </div>
+      <div class="preview" id="preview" style="display:none"></div>
+    </div>
+  </section>
+
+  <!-- ======================= C ITEMS ======================= -->
+  <section class="page" id="p-c">
+    <div class="h"><h2>IRs with code C</h2><button class="btn ghost" onclick="loadNotices(true)">Refresh</button></div>
+    <p class="hint" style="margin:0 2px 12px">Choose for each one: <b>Resubmit</b> (the office PC makes the next Rev) or <b>Not ready</b>.</p>
+    <div id="notices"><div class="empty">Nothing yet.</div></div>
+  </section>
+
+  <!-- ======================= HISTORY ======================= -->
+  <section class="page" id="p-his">
+    <div class="h"><h2>My requests</h2><button class="btn ghost" onclick="loadHistory()">Refresh</button></div>
+    <div id="queueBox"></div>
+    <div id="hist"><div class="empty">Pull your latest requests with Refresh.</div></div>
+  </section>
+
+  <!-- ======================= SETTINGS ======================= -->
+  <section class="page" id="p-set">
+    <div class="h"><h2>Settings</h2></div>
+    <div class="card">
+      <label class="f">Your name</label>
+      <input type="text" id="sName" placeholder="Shown with every request">
+      <label class="f">Server link (Web app URL) <a href="#" class="small" style="color:var(--brand)" onclick="$('sUrl').value=DEFAULT_URL;return false">default</a></label>
+      <input type="url" id="sUrl" placeholder="https://script.google.com/macros/s/…/exec">
+      <label class="f">PIN (only if the office gave you one)</label>
+      <input type="password" id="sPin" placeholder="PIN">
+      <div class="row" style="margin-top:16px">
+        <button class="btn" style="flex:1" onclick="saveSettings()">Save</button>
+        <button class="btn ghost" style="flex:1" onclick="loadConfig(true)">Reload lists</button>
+      </div>
+      <p class="small" id="cfgInfo" style="margin-top:12px"></p>
+    </div>
+    <div class="card">
+      <div class="step"><span class="num">i</span><h2>About</h2></div>
+      <p class="small" id="aText" style="line-height:1.7;margin:0 0 12px;white-space:pre-line"></p>
+      <p class="small" style="line-height:1.7;margin:0">
+        <b id="aOwner">Owner: Abdullah Aboelhamd</b><br><span id="aTitle">Mechanical Technical Office Engineer</span><br>
+        <span id="aDesigner">This Model designed by Eng : Abdullah Aboelhamd</span><br>
+        <span id="aVer" style="opacity:.7"></span>
+      </p>
+    </div>
+  </section>
+</main>
+
+<nav>
+  <button class="on" id="n-new" onclick="go('new')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>New IR</button>
+  <button id="n-c" onclick="go('c')"><span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><i id="cBadge" style="display:none;background:var(--err)">0</i></span>C Items</button>
+  <button id="n-his" onclick="go('his')"><span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg><i id="qBadge" style="display:none">0</i></span>History</button>
+  <button id="n-set" onclick="go('set')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Settings</button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------------- storage (never crash if storage is blocked) ---------------- */
+const S = {
+  get(k, d){ try{ const v = localStorage.getItem('ir.'+k); return v===null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem('ir.'+k, JSON.stringify(v)); }catch(e){} }
+};
+/* Lists used until the server answers the first time (same as the Google Form) */
+const DEFAULT_CFG = {
+  title:'IR_Mech', subtitle:'Submit your Finished Works and it will be sent automatically.',
+  designer:'Eng : Abdullah Aboelhamd', owner:'Abdullah Aboelhamd', ownerTitle:'Mechanical Technical Office Engineer',
+  floors:['Ground Floor','First Floor','Roof Floor','Upper Roof'],
+  who:['ذاتي','شهاب جبريل','مرزوق حامد','الياسمين','الصفوة','إبراهيم بدوي','أحمد السيد أبوغدية','أحمد عبدالغني','علي محمد علي','هاني عبدالحميد','حماده'],
+  weights:['Installation','Test&Installation','Submitted to consultant'],
+  types:[
+    ['Builder Work','Builder Work','Builder Work','Ground Floor, First Floor, Roof Floor, Upper Roof'],
+    ['Installation and Testing of Ground Floor Drainage under Slab-on-Grade (S.O.G.)','Ground Floor Drainage under S.O.G','Drainage',''],
+    ['Installation and Testing of  External Network Drainage under Slab-on-Grade (S.O.G.)','External Drainage Network under S.O.G','Drainage',''],
+    ['Installation and Testing of Drainage Piping Network Inside Toilets','Drainage Piping Inside Toilets','Drainage','Ground Floor, First Floor'],
+    ['Installation and Testing of Drainage Piping Network at Roof Floor','Drainage Piping at Roof Floor','Drainage',''],
+    ['Installation of Stormwater Pipes','Stormwater Pipes','Drainage',''],
+    ['Plumbing Riser Installation and Pressure Testing','Plumbing Riser','Water Supply',''],
+    ['Installation and Testing of Water Supply Piping Network Inside Toilets','Water Supply Piping Inside Toilets','Water Supply','Ground Floor, First Floor'],
+    ['Installation and Testing of Water Supply Piping Network at Roof Floor','Water Supply Piping at Roof Floor','Water Supply',''],
+    ['Installation and Testing of External Network Watersupply','External Network Water Supply','Water Supply',''],
+    ['Installation of Isolation Valves,Gate Valves and Automatic Air Vent','Isolation Valves, Gate Valves & Air Vents','Water Supply',''],
+    ['Condensate Drain Pipes in Walls','Condensate Drain Pipes in Walls','HVAC','Ground Floor, First Floor'],
+    ['Condensate Drain Pipes Under Tile','Condensate Drain Pipes Under Tile','HVAC','Ground Floor, First Floor'],
+    ['UPVC Sleeves for A/C Refrigerant Copper Pipes','UPVC Sleeves for A/C Copper Pipes','HVAC','Ground Floor, First Floor'],
+    ['Installation of Duct Works','Duct Works','HVAC',''],
+    ['Installation of Plumbing Fixtures','Plumbing Fixtures (all floors)','Fixtures & Drains',''],
+    ['Installation of Floordrains at {floor}','Floor Drains','Fixtures & Drains','Ground Floor, First Floor'],
+    ['Installation of Balconydrains at first floor','Balcony Drains (First Floor)','Fixtures & Drains',''],
+    ['Installation of Side roof drain','Side Roof Drain','Fixtures & Drains',''],
+    ['Installation of Inspection Chamber','Inspection Chambers','Fixtures & Drains',''],
+    ['Installation of Gully traps','Gully Traps','Fixtures & Drains','']
+  ].map((r,i)=>({id:i+1,text:r[0],label:r[1],group:r[2],floors:r[3]?r[3].split(',').map(x=>x.trim()):[]}))
+};
+
+const APP_VERSION = '1.2';
+const DEFAULT_ABOUT = 'Send your finished works from site. The IR requests are prepared at the Mechanical Technical Office with the official Document Control format and drawings, and you can follow every request in History.';
+let cfg = S.get('cfg', DEFAULT_CFG);
+const st = { villas: [], sel: {}, who: '', weight: '' };   // sel: typeId -> [floors]
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function toast(msg, ms=2600){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'), ms); }
+function go(p){ ['new','c','his','set'].forEach(x=>{ $('p-'+x).classList.toggle('on',x===p); $('n-'+x).classList.toggle('on',x===p); });
+  window.scrollTo({top:0,behavior:'smooth'}); if(p==='his') { renderQueue(); loadHistory(); } if(p==='c') loadNotices(false); }
+window.openPage = p => go(p);      // used by the phone notification
+
+/* ---------------- header / lists ---------------- */
+function applyCfg(){
+  $('title').textContent = cfg.title || 'IR_Mech'; document.title = cfg.title || 'IR_Mech';
+  $('subtitle').textContent = cfg.subtitle || '';
+  const ow = cfg.owner || DEFAULT_CFG.owner, ot = cfg.ownerTitle || DEFAULT_CFG.ownerTitle;
+  $('owner').textContent = ow; $('ownerTitle').textContent = ot;
+  $('ownerAv').textContent = ow.split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  $('aOwner').textContent = 'Owner: ' + ow; $('aTitle').textContent = ot;
+  $('aDesigner').textContent = cfg.designer ? 'This Model designed by ' + cfg.designer : '';
+  $('aText').textContent = cfg.about || DEFAULT_ABOUT;
+  $('aVer').textContent = 'Version ' + APP_VERSION;
+  renderTypes(); renderPick('who', cfg.who, 'who'); renderPick('weight', cfg.weights, 'weight'); update();
+}
+function renderPick(box, list, key){
+  if (st[key] && !list.includes(st[key])) st[key] = '';
+  $(box).innerHTML = list.map(v=>`<span class="chip ${st[key]===v?'on':''}" data-v="${esc(v)}">${esc(v)}</span>`).join('');
+  $(box).querySelectorAll('.chip').forEach(c=>c.onclick=()=>{ st[key]=c.dataset.v; renderPick(box,list,key); update(); });
+}
+function renderTypes(){
+  const q = $('q').value.trim().toLowerCase();
+  const groups = {};
+  cfg.types.forEach(t=>{ if(q && !(t.label+' '+t.text+' '+t.group).toLowerCase().includes(q)) return; (groups[t.group]=groups[t.group]||[]).push(t); });
+  let h = '';
+  Object.keys(groups).forEach(g=>{
+    h += `<div class="grp">${esc(g)}</div>`;
+    groups[g].forEach(t=>{
+      const on = st.sel[t.id]; const fl = on || [];
+      h += `<div class="item ${on?'on':''}" data-id="${t.id}"><div class="t"><span class="tick"></span><span>${esc(t.label)}</span>
+            ${t.floors.length?`<span class="tag">${t.floors.length} floors</span>`:''}</div>`;
+      if (t.floors.length) h += `<div class="floors chips">${t.floors.map(f=>`<span class="chip ${fl.includes(f)?'on':''}" data-f="${esc(f)}">${esc(f)}</span>`).join('')}
+            ${on && !fl.length ? '<span class="need">choose a floor</span>':''}</div>`;
+      h += `</div>`;
+    });
+  });
+  $('types').innerHTML = h || '<div class="empty">Nothing found</div>';
+  $('types').querySelectorAll('.item').forEach(el=>{
+    const id = +el.dataset.id;
+    el.querySelector('.t').onclick = ()=>{ if (st.sel[id]) delete st.sel[id]; else st.sel[id] = []; renderTypes(); update(); };
+    el.querySelectorAll('.floors .chip').forEach(c=>c.onclick=e=>{ e.stopPropagation();
+      const a = st.sel[id]; const f = c.dataset.f; const i = a.indexOf(f); i<0 ? a.push(f) : a.splice(i,1); renderTypes(); update(); });
+  });
+}
+
+/* ---------------- villas ----------------
+   Every villa = its own IR.  S types (semi-detached) always go as their pair, e.g. 46 -> "46 & 47".
+   The list below comes from IR Maker / the IPC; a "Villas" tab in the sheet replaces it if filled. */
+const VILLAS = {"t":{"1":"T05","2":"T05","3":"T05","4":"T05","5":"S01A","6":"S01A","7":"T02","8":"T01","9":"T03","10":"T05","11":"T05","12":"T05","13":"T05","14":"T05","15":"T05","16":"T05","17":"T05","18":"T05","19":"T05","20":"T06","21":"T06","22":"T06","23":"T05","24":"T03","25":"T01","26":"T02","27":"T05","28":"T05","29":"T05","30":"T05","31":"T05","32":"T05","33":"T05","34":"T05","35":"T05","36":"T06","37":"T05","38":"T05","39":"T06","40":"T06","41":"T06","42":"T06","43":"T06","44":"S01B","45":"S01B","46":"S01A","47":"S01A","48":"S01A","49":"S01A","50":"S01A","51":"S01A","52":"S01A","53":"S01A","54":"S01A","55":"S01A","56":"S01A","57":"S01A","58":"S01A","59":"S01A","60":"S01B","61":"S01B","62":"S01B","63":"S01B","64":"T06","65":"T02","66":"T01","67":"T03","68":"T06","69":"T06","70":"T06","71":"T06","72":"T06","73":"T06","74":"T06","75":"T06","76":"T06","77":"T06","78":"T06","79":"T04","80":"T04","81":"T02","82":"T01","83":"T03","84":"T04","85":"T04","86":"T06","87":"T06","88":"T06","89":"T06","90":"T06","91":"T06","92":"T06","93":"T06","94":"T04","95":"T02","96":"T01","97":"T03","98":"T04","99":"T05","100":"T05","101":"T05","102":"T05","103":"T06","104":"T06","105":"S02B","106":"S02B","107":"S02B","108":"S02B","109":"S02A","110":"S02A","111":"T06","112":"T06","113":"T04","114":"T01","115":"T02","116":"T06","117":"T06","118":"T06","119":"T06","120":"T06","121":"T06","122":"T06","123":"T06","124":"T06","125":"S01A","126":"S01A","127":"S01A","128":"S01A","129":"S01A","130":"S01A","131":"S01A","132":"S01A","133":"S01A","134":"S01A","135":"S01A","136":"S01A","137":"S01A","138":"S01A","139":"T05","140":"T05","141":"T05","142":"T05","143":"T05","144":"T05","145":"T02","146":"T01","147":"T03","148":"T05","149":"T04","150":"T06","151":"T06","152":"T06","153":"T06","154":"T06","155":"T06","156":"T06","157":"T06","158":"T06","159":"T06","160":"T06","161":"T06","162":"T04","163":"T04","164":"T04","165":"T04","166":"T04","167":"T04","168":"T02","169":"T01","170":"T03","171":"T04","172":"T04","173":"T04","174":"T06","175":"T06","175A":"T06","176":"T06","177":"T06","178":"T06","179":"T02","180":"T01","181":"T03","182":"T04","183":"T04","184":"T04","185":"T04","186":"T04","187":"T04","188":"T04","189":"S02B","190":"S02B","191":"S02B","192":"S02B","193":"S02B","194":"S02B","195":"S02A","196":"S02A","197":"S02A","198":"S02A","199":"T06","200":"T06","201":"T06","202":"T06","203":"S02A","204":"S02A","205":"S02A","206":"S02A","207":"T04","208":"T04","209":"T04","210":"T02","211":"T01","212":"T03","213":"T04","214":"T04","215":"T06","216":"T06","217":"T06","218":"T06","219":"T06","220":"T06","221":"T06","222":"S01A","223":"S01A","224":"S01A","225":"S01A","226":"S01A","227":"S01A","228":"S01A","229":"S01A","230":"S01A","231":"S01A","232":"S01A","233":"S01A","234":"S01A","235":"S01A","236":"S01A","237":"S01A","238":"S01A","239":"S01A","240":"S01A","241":"S01A","242":"S01A","243":"S01A","244":"S01A","245":"S01A","246":"S01A","247":"S01A","248":"S02A","249":"S02A","250":"S02A","251":"S02A","252":"S02A","253":"S02A","254":"S02A","255":"S02A","256":"S02B","257":"S02B","258":"T05","259":"T05","260":"T05","261":"T05","262":"T05","263":"T04","264":"T04","265":"T02","266":"T01","267":"T03","268":"T06","269":"T05","270":"T05","271":"T06","272":"T06","273":"T06","274":"T05","275":"T02","276":"T01","277":"T03","278":"T06","279":"T06","280":"T06","281":"T06","282":"T06","283":"T06","284":"T06","285":"T06","286":"T06","287":"T06","288":"T06","289":"T06","290":"T06","290A":"T06","291":"T06","292":"T06","293":"T06","294":"T02","295":"T01","296":"T03","297":"T05","298":"T05","299":"T05","300":"T05","301":"T05","302":"T05","303":"T05","304":"S01B","305":"S01B","306":"S01A","307":"S01A","308":"S01A","309":"S01A","310":"S02A","311":"S02A","312":"S02A","313":"S02A","314":"S02A","315":"S02A","316":"T04","317":"T04","318":"T02","319":"T01","320":"T03","321":"T06","322":"T06","323":"S02A","324":"S02A","325":"S02A","326":"S02A","327":"S02A","328":"S02A","329":"S02A","330":"S02A","331":"S02A","332":"S02A","333":"S02A","334":"S02A","335":"S02A","336":"S02A","337":"T06","338":"T06","339":"T06","340":"T04","341":"T04","342":"T04","343":"T04","344":"T04","345":"T02","346":"T01","347":"T03","348":"T04","349":"T04","350":"T06","351":"T06","352":"T06","353":"T06","354":"T06","1E":"S01B","2E":"S01B","3E":"S01B","4E":"S01B","5E":"S01B","6E":"S01B","7E":"T04","8E":"S01B","9E":"S01B","10E":"T05","11E":"T03","12E":"S01B","13E":"S01B","14E":"S01B","15E":"S01B","16E":"S01B","17E":"S01B","18E":"S01B","19E":"S01B","20E":"T05","21E":"T05","22E":"T03","23E":"T04","24E":"T05","25E":"T04","26E":"T04","27E":"T04","28E":"T05","29E":"T05"},"p":{"5":"5 & 6","6":"5 & 6","46":"46 & 47","47":"46 & 47","48":"48 & 49","49":"48 & 49","50":"50 & 51","51":"50 & 51","52":"52 & 53","53":"52 & 53","54":"54 & 55","55":"54 & 55","56":"56 & 57","57":"56 & 57","58":"58 & 59","59":"58 & 59","125":"125 & 126","126":"125 & 126","127":"127 & 128","128":"127 & 128","129":"129 & 130","130":"129 & 130","131":"131 & 132","132":"131 & 132","133":"133 & 134","134":"133 & 134","135":"135 & 136","136":"135 & 136","137":"137 & 138","138":"137 & 138","222":"222 & 223","223":"222 & 223","224":"224 & 225","225":"224 & 225","226":"226 & 227","227":"226 & 227","228":"228 & 229","229":"228 & 229","230":"230 & 231","231":"230 & 231","232":"232 & 233","233":"232 & 233","234":"234 & 235","235":"234 & 235","236":"236 & 237","237":"236 & 237","238":"238 & 239","239":"238 & 239","240":"240 & 241","241":"240 & 241","242":"242 & 243","243":"242 & 243","244":"244 & 245","245":"244 & 245","246":"246 & 247","247":"246 & 247","306":"306 & 307","307":"306 & 307","308":"308 & 309","309":"308 & 309","44":"44 & 45","45":"44 & 45","60":"60 & 61","61":"60 & 61","62":"62 & 63","63":"62 & 63","304":"304 & 305","305":"304 & 305","1E":"1E & 2E","2E":"1E & 2E","3E":"3E & 4E","4E":"3E & 4E","5E":"5E & 6E","6E":"5E & 6E","8E":"8E & 9E","9E":"8E & 9E","12E":"12E & 13E","13E":"12E & 13E","14E":"14E & 15E","15E":"14E & 15E","16E":"16E & 17E","17E":"16E & 17E","18E":"18E & 19E","19E":"18E & 19E","109":"109 & 110","110":"109 & 110","195":"195 & 196","196":"195 & 196","197":"197 & 198","198":"197 & 198","203":"203 & 204","204":"203 & 204","205":"205 & 206","206":"205 & 206","248":"248 & 249","249":"248 & 249","250":"250 & 251","251":"250 & 251","252":"252 & 253","253":"252 & 253","254":"254 & 255","255":"254 & 255","310":"310 & 311","311":"310 & 311","312":"312 & 313","313":"312 & 313","314":"314 & 315","315":"314 & 315","323":"323 & 324","324":"323 & 324","325":"325 & 326","326":"325 & 326","327":"327 & 328","328":"327 & 328","329":"329 & 330","330":"329 & 330","331":"331 & 332","332":"331 & 332","333":"333 & 334","334":"333 & 334","335":"335 & 336","336":"335 & 336","105":"105 & 106","106":"105 & 106","107":"107 & 108","108":"107 & 108","189":"189 & 190","190":"189 & 190","191":"191 & 192","192":"191 & 192","193":"193 & 194","194":"193 & 194","256":"256 & 257","257":"256 & 257"}};
+function villaInfo(v){
+  const src = (cfg.villas && cfg.villas.t && Object.keys(cfg.villas.t).length) ? cfg.villas : VILLAS;
+  v = String(v).trim().toUpperCase().replace(/\s+/g,'');
+  return { id: src.p[v] || v, type: src.t[v] || '' };
+}
+function addVillas(){
+  const raw = $('villaIn').value.trim(); if(!raw) return;
+  raw.split(/[,\n،&+و]+|\s+/).forEach(part=>{
+    part = part.trim(); if(!part) return;
+    const m = part.match(/^(\d+)(?:to|\.\.|–|-)(\d+)$/i);       // "10to15" / "10-15" range
+    if (m && +m[2] > +m[1] && +m[2]-+m[1] < 60) { for(let v=+m[1]; v<=+m[2]; v++) pushVilla(String(v)); return; }
+    pushVilla(part);
+  });
+  $('villaIn').value=''; renderVillas(); update();
+}
+function pushVilla(v){ const i = villaInfo(v); if(i.id && !st.villas.includes(i.id)) st.villas.push(i.id); }
+function badVillas(){ return st.villas.filter(v=>!villaInfo(v.split(' & ')[0]).type); }
+function renderVillas(){
+  $('villas').innerHTML = st.villas.map((v,i)=>{ const t = villaInfo(v.split(' & ')[0]).type;
+    return `<span class="chip villa" style="${t?'':'background:#fee2e2;color:#991b1b'}">Villa ${esc(v)}
+      <small style="opacity:.7;font-weight:600">${t?esc(t):'not in list'}</small> <span class="x" data-i="${i}">✕</span></span>`; }).join('');
+  $('villas').querySelectorAll('.x').forEach(x=>x.onclick=()=>{ st.villas.splice(+x.dataset.i,1); renderVillas(); update(); });
+}
+$('villaIn').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); addVillas(); } });
+
+/* ---------------- build requests ---------------- */
+const MAX_PER_SEND = 300;     // more than this in one send is almost always a mistake
+const CONFIRM_FROM = 15;      // ask "are you sure" from this many requests
+function items(){
+  const out = [], seen = new Set();
+  st.villas.forEach(v=>{
+    cfg.types.forEach(t=>{
+      const fl = st.sel[t.id]; if(!fl) return;
+      const add = (type, floor, label)=>{ const k = (v+'|'+type+'|'+floor).toLowerCase(); if(seen.has(k)) return; seen.add(k); out.push({villa:v, type, floor, label}); };
+      if (t.floors.length) fl.forEach(f=>add(t.text.replace('{floor}', f), f, t.label+' – '+f));
+      else add(t.text, '', t.label);
+    });
+  });
+  return out;
+}
+function problems(){
+  const p=[];
+  if(!st.villas.length) p.push($('villaIn').value.trim() ? 'press Add for the villa' : 'add a villa');
+  const bad = badVillas(); if(bad.length) p.push('villa ' + bad.join(', ') + ' is not in the villa list');
+  if(!Object.keys(st.sel).length) p.push('tick an IR type');
+  cfg.types.forEach(t=>{ if(st.sel[t.id] && t.floors.length && !st.sel[t.id].length) p.push('floor for '+t.label); });
+  if(!st.who) p.push('who did the work'); if(!st.weight) p.push('weight of work');
+  const n = items().length;
+  if(n > MAX_PER_SEND) p.push(`too many (${n}) - max ${MAX_PER_SEND} per send, split it`);
+  return p;
+}
+function update(){
+  const it = items(), pr = problems();
+  $('count').textContent = it.length;
+  $('countTxt').textContent = pr.length ? 'Missing: ' + pr.join(', ') : (it.length===1?'IR request ready':'IR requests ready');
+  $('sendBtn').disabled = !!pr.length || !it.length; $('sendBtn').style.opacity = $('sendBtn').disabled ? .45 : 1;
+  const pv = $('preview'); pv.style.display = it.length && st.showPrev ? 'block' : 'none';
+  $('pvToggle').style.display = it.length ? 'inline' : 'none'; $('pvToggle').textContent = st.showPrev ? 'Hide list' : 'Show list';
+  pv.innerHTML = it.map(x=>`<div><b>V ${esc(x.villa)}</b><span>${esc(x.label)}</span></div>`).join('');
+}
+
+/* ---------------- server ---------------- */
+/* the office server; a different link typed in Settings replaces it */
+const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbwK33wiCj6ieBWkMZo7tnGP_1ogYsT6r0TdBNrlauRr0x1qyGPv9aJ1GfnPzO5f79YeQQ/exec';
+const url = () => ((S.get('url','')||'').trim() || DEFAULT_URL);
+async function api(params, body){
+  const u = url(); if(!u) throw new Error('No server link - open Settings');
+  if (u === 'demo') return demoApi(params, body);
+  const q = new URLSearchParams(params).toString();
+  let j;
+  try{
+    const r = body ? await fetch(u, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(body)})
+                   : await fetch(u + (u.includes('?')?'&':'?') + q);
+    j = await r.json();
+  }catch(e){ throw new Error(navigator.onLine ? 'The office server is busy, trying again shortly' : 'No internet connection'); }
+  if(!j.ok) throw new Error(j.error === 'Wrong PIN' ? 'Check the PIN in Settings' : (j.error || 'Please try again'));
+  return j;
+}
+async function loadConfig(manual){
+  if(!url()){ $('setupCard').style.display='block'; return; }
+  $('setupCard').style.display='none';
+  try{
+    const j = await api({action:'config'});
+    cfg = {...DEFAULT_CFG, ...j}; S.set('cfg', cfg); applyCfg();
+    $('cfgInfo').textContent = `Lists loaded: ${cfg.types.length} IR types, ${cfg.who.length} names.`;
+    if(manual) toast('Lists updated ✓');
+  }catch(e){ $('cfgInfo').textContent = 'Using saved lists (' + e.message + ')'; if(manual) toast(e.message); }
+}
+
+/* offline queue: a send that fails is kept and sent again later */
+function queue(){ return S.get('queue', []); }
+function setQueue(q){ S.set('queue', q); const b=$('qBadge'); b.style.display=q.length?'inline':'none'; b.textContent=q.length; }
+let flushing = false;
+async function flush(){
+  if (flushing) return; flushing = true;
+  try{
+    let q = queue();
+    for (const job of [...q]) {
+      if(!navigator.onLine) break;
+      try { await api({}, job); q = queue().filter(x=>x.batch!==job.batch); setQueue(q);
+            toast(`${job.items.length} request${job.items.length>1?'s':''} delivered to the office ✓`); }
+      catch(e){ setTimeout(flush, 20000); break; }        // try again in 20 s
+    }
+  } finally { flushing = false; if($('p-his').classList.contains('on')) renderQueue(); }
+}
+async function send(){
+  const it = items(); if(problems().length || !it.length) return;
+  const name = (S.get('name','')||'').trim();
+  if(!name){ toast('Write your name in Settings first'); go('set'); return; }
+  if(it.length >= CONFIRM_FROM && !(await confirmBig(it))) return;
+  const job = { action:'submit', pin:S.get('pin',''), by:name, who:st.who, weight:st.weight,
+                batch: Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+                items: it.map(x=>({villa:x.villa, type:x.type, floor:x.floor})) };
+  // saved on the phone first (instant), then delivered in the background - nothing is lost on a weak network
+  setQueue([...queue(), job]);
+  showDone(it.length, !navigator.onLine);
+  flush();
+}
+/* big send: show what it means before sending (villas x works) */
+function confirmBig(it){
+  return new Promise(res=>{
+    const works = {}; it.forEach(x=>{ works[x.label]=(works[x.label]||0)+1; });
+    const m = document.createElement('div'); m.className='modal';
+    m.innerHTML = `<div class="sheet"><div class="big" style="text-align:center">${it.length}</div>
+      <p style="text-align:center;margin:6px 0 14px"><b>IR requests will be sent</b><br><span class="small">${st.villas.length} villa(s) × ${Object.keys(works).length} work(s)</span></p>
+      <div class="preview" style="display:block;max-height:40vh">${Object.entries(works).map(([k,n])=>`<div><b>${n}×</b><span>${esc(k)}</span></div>`).join('')}</div>
+      <div class="row" style="margin-top:16px"><button class="btn ghost" style="flex:1" id="mNo">Back</button><button class="btn" style="flex:1" id="mYes">Send all</button></div></div>`;
+    document.body.appendChild(m);
+    m.querySelector('#mNo').onclick=()=>{ m.remove(); res(false); };
+    m.querySelector('#mYes').onclick=()=>{ m.remove(); res(true); };
+  });
+}
+function showDone(n, queued, why){
+  st.villas=[]; st.sel={}; renderVillas(); renderTypes(); update();
+  const c = $('sumCard'); const old = c.innerHTML;
+  c.innerHTML = `<div class="done"><div class="ck" style="${queued?'background:var(--accent)':''}"></div>
+    <b style="font-size:17px">${queued ? 'Saved on the phone' : n + ' request' + (n>1?'s':'') + ' sent'}</b>
+    <p class="small">${queued ? 'No connection now. It will be sent automatically when the phone is online.' : 'You can follow ' + (n>1?'them':'it') + ' in History.'}</p>
+    <button class="btn ghost" id="again">New request</button></div>`;
+  $('again').onclick = ()=>{ c.innerHTML = old; update(); window.scrollTo({top:0,behavior:'smooth'}); };
+}
+
+/* ---------------- history ---------------- */
+function stClass(s){ if(!s) return ['wait','Waiting for PC']; if(/^(created|resubmitted)/i.test(s)) return ['ok', s];
+  if(/already|skip/i.test(s)) return ['warn', s]; return ['err', s]; }
+function renderQueue(){
+  const q = queue(); const n = q.reduce((a,j)=>a+j.items.length,0);
+  $('queueBox').innerHTML = q.length ? `<div class="card hist" style="border-left:4px solid var(--accent)"><b>${n} request${n>1?'s':''} on the way</b>
+     <div class="meta">${navigator.onLine?'Being delivered to the office…':'They go out by themselves when the phone is online.'}</div>
+     <button class="btn ghost" style="margin-top:10px" onclick="flush()">Send now</button></div>` : '';
+}
+function renderHistory(rows){
+  $('hist').innerHTML = rows.length ? rows.map(r=>{ const [c,t]=stClass(r.status); const d=new Date(r.time);
+    return `<div class="card hist"><div class="top"><b>Villa ${esc(r.villa)}</b><span class="st ${c}">${esc(t)}</span></div>
+    <div class="ty">${workText(r.type, r.floor)}</div>
+    <div class="meta">${isNaN(d)?esc(r.time):d.toLocaleString()} · <span class="rtl">${esc(r.who)}</span> · ${esc(r.weight)}</div></div>`; }).join('')
+    : '<div class="empty">No requests yet.</div>';
+}
+async function loadHistory(){
+  const saved = S.get('hist', null);
+  if (saved) renderHistory(saved);                       // instant: last saved copy, then refresh
+  else $('hist').innerHTML = '<div class="empty"><span class="spin" style="border-color:rgba(0,0,0,.15);border-top-color:var(--brand)"></span>Loading…</div>';
+  try{
+    const j = await api({action:'history', pin:S.get('pin',''), by:(S.get('name','')||'').trim()});
+    S.set('hist', j.rows); renderHistory(j.rows);
+  }catch(e){ if(!saved) $('hist').innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+}
+
+/* work + floor, without repeating the floor when the work text already has it */
+function workText(type, floor){
+  const k = s => String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  return esc(type) + (floor && !k(type).includes(k(floor)) ? ' – ' + esc(floor) : '');
+}
+
+/* ---------------- C items (sent from the office) ---------------- */
+let notices = S.get('notices', []);
+function renderNotices(){
+  const open = notices.filter(n=>!n.response);
+  const b = $('cBadge'); b.style.display = open.length ? 'inline' : 'none'; b.textContent = open.length;
+  if(!notices.length){ $('notices').innerHTML = '<div class="empty">No IRs with code C for you. 👍</div>'; return; }
+  $('notices').innerHTML = notices.map(n=>{
+    let state = '';
+    if (n.response === 'Resubmit') state = n.pc ? (/^created/i.test(n.pc) ? ['ok', n.pc] : ['err', n.pc]) : ['wait','Resubmit – waiting for PC'];
+    else if (n.response) state = ['warn', 'Not ready'];
+    return `<div class="card hist" style="${n.response?'':'border-left:4px solid var(--err)'}">
+      <div class="top"><b>Villa ${esc(n.villa)}</b>${state ? `<span class="st ${state[0]}">${esc(state[1])}</span>` : `<span class="st err">Code ${esc(n.code||'C')}</span>`}</div>
+      <div class="ty">${workText(n.type, n.floor)}</div>
+      <div class="meta">${esc(n.irno)}${n.comment?'<br>'+esc(n.comment):''}${n.response?`<br>${esc(n.response)} by ${esc(n.by||'')}`:''}</div>
+      ${n.response && n.response!=='Not ready' ? '' : `<div class="row" style="margin-top:12px">
+        <button class="btn" style="flex:1" onclick="answer('${esc(n.irno)}','Resubmit')">Resubmit</button>
+        <button class="btn ghost" style="flex:1" onclick="answer('${esc(n.irno)}','Not ready')">${n.response?'Still not ready':'Not ready'}</button></div>`}
+    </div>`; }).join('');
+}
+async function loadNotices(manual){
+  if(!url()) return;
+  try{
+    const j = await api({action:'notices', pin:S.get('pin',''), by:(S.get('name','')||'').trim()});
+    notices = j.rows || []; S.set('notices', notices); renderNotices();
+    if(manual) toast('Updated ✓');
+  }catch(e){ renderNotices(); if(manual) toast(e.message); }
+}
+function askSheet(title, text, yes){
+  return new Promise(res=>{
+    const m = document.createElement('div'); m.className='modal';
+    m.innerHTML = `<div class="sheet"><p style="text-align:center;font-size:16px;margin:4px 0 6px"><b>${esc(title)}</b></p>
+      <p class="small" style="text-align:center;margin:0 0 16px">${text}</p>
+      <div class="row"><button class="btn ghost" style="flex:1" id="aNo">Cancel</button><button class="btn" style="flex:1" id="aYes">${esc(yes)}</button></div></div>`;
+    document.body.appendChild(m);
+    m.querySelector('#aNo').onclick=()=>{ m.remove(); res(false); };
+    m.querySelector('#aYes').onclick=()=>{ m.remove(); res(true); };
+  });
+}
+async function answer(irno, response){
+  if(response==='Resubmit' && !(await askSheet('Resubmit this IR?', esc(irno) + '<br>The office PC will create the next Rev.', 'Resubmit'))) return;
+  try{
+    await api({}, {action:'respond', pin:S.get('pin',''), by:(S.get('name','')||'').trim(), irno, response});
+    toast(response==='Resubmit' ? 'Sent – the PC will make the new Rev ✓' : 'Saved ✓'); loadNotices(false);
+  }catch(e){ toast(e.message); }
+}
+
+/* ---------------- settings ---------------- */
+function fillSettings(){ $('sName').value=S.get('name',''); $('sUrl').value=url(); $('sPin').value=S.get('pin',''); }
+function saveSettings(){ S.set('name',$('sName').value.trim()); const u=$('sUrl').value.trim(); S.set('url', u===DEFAULT_URL ? '' : u); $('sUrl').value=url(); S.set('pin',$('sPin').value.trim());
+  toast('Saved ✓'); nativeSync(); loadConfig(true); loadNotices(false); }
+/* the phone app checks for new C items in the background (notification) with the same settings */
+function nativeSync(){ try{ if(window.Android) Android.saveConfig(url(), S.get('pin',''), (S.get('name','')||'').trim()); }catch(e){} }
+
+/* ---------------- demo server (type "demo" as the link to try the app without the sheet) ---------------- */
+function demoApi(params, body){
+  const rows = S.get('demoRows', []);
+  if (body && body.action==='submit'){ body.items.forEach(i=>rows.unshift({time:new Date().toISOString(), ...i, who:body.who, weight:body.weight, status:'', note:''})); S.set('demoRows', rows.slice(0,60)); return Promise.resolve({ok:true, added:body.items.length}); }
+  if (params.action==='history') return Promise.resolve({ok:true, rows});
+  const dn = S.get('demoNotices', [
+    {irno:'PEG-1202-CP2C-CN-SH-CIR-MECH-09278-Rev00', villa:'85', type:'Installation and Testing of Drainage Piping Network Inside Ground Floor Toilets', floor:'', code:'C', comment:'Slope not as per drawing', response:''},
+    {irno:'PEG-1202-CP2C-CN-SH-CIR-MECH-12656-Rev00', villa:'22', type:'Installation and Testing of Drainage Piping Network at Roof Floor', floor:'', code:'C', comment:'', response:''}]);
+  if (params.action==='notices') return Promise.resolve({ok:true, rows:dn});
+  if (body && body.action==='respond'){ dn.forEach(n=>{ if(n.irno===body.irno){ n.response=body.response; n.by=body.by; } }); S.set('demoNotices', dn); return Promise.resolve({ok:true}); }
+  return Promise.resolve({ok:true, ...DEFAULT_CFG});
+}
+
+/* ---------------- start ---------------- */
+function net(){ $('net').textContent = navigator.onLine ? 'online' : 'offline'; if(navigator.onLine) flush(); }
+window.addEventListener('online', net); window.addEventListener('offline', net);
+fillSettings(); applyCfg(); renderVillas(); setQueue(queue()); net(); loadConfig(false);
+renderNotices(); loadNotices(false); nativeSync();
+setInterval(()=>{ if(navigator.onLine){ loadNotices(false); flush(); } }, 60000);
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) loadNotices(false); });
+</script>
+
+<script>
+/* web version: the app page is kept on the phone so it opens even without internet */
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
