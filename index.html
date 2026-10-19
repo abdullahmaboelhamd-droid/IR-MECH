@@ -254,7 +254,7 @@ const DEFAULT_CFG = {
   ].map((r,i)=>({id:i+1,text:r[0],label:r[1],group:r[2],floors:r[3]?r[3].split(',').map(x=>x.trim()):[]}))
 };
 
-const APP_VERSION = '1.2';
+const APP_VERSION = '1.3';
 const DEFAULT_ABOUT = 'Send your finished works from site. The IR requests are prepared at the Mechanical Technical Office with the official Document Control format and drawings, and you can follow every request in History.';
 let cfg = S.get('cfg', DEFAULT_CFG);
 const st = { villas: [], sel: {}, who: '', weight: '' };   // sel: typeId -> [floors]
@@ -384,8 +384,9 @@ async function api(params, body){
   const q = new URLSearchParams(params).toString();
   let j;
   try{
-    const r = body ? await fetch(u, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(body)})
-                   : await fetch(u + (u.includes('?')?'&':'?') + q);
+    // iPhone Safari keeps answers in its cache: every read gets a unique stamp + no-store so it always asks the sheet
+    const r = body ? await fetch(u, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(body), cache:'no-store'})
+                   : await fetch(u + (u.includes('?')?'&':'?') + q + '&_=' + Date.now(), {cache:'no-store'});
     j = await r.json();
   }catch(e){ throw new Error(navigator.onLine ? 'The office server is busy, trying again shortly' : 'No internet connection'); }
   if(!j.ok) throw new Error(j.error === 'Wrong PIN' ? 'Check the PIN in Settings' : (j.error || 'Please try again'));
@@ -471,14 +472,21 @@ function renderHistory(rows){
     <div class="meta">${isNaN(d)?esc(r.time):d.toLocaleString()} · <span class="rtl">${esc(r.who)}</span> · ${esc(r.weight)}</div></div>`; }).join('')
     : '<div class="empty">No requests yet.</div>';
 }
+/* shown above a list when it could not be refreshed from the sheet (so an old copy is never mistaken for the real one) */
+function staleBar(msg){ return `<div class="card hist" style="border-left:4px solid var(--err);animation:none"><b>Not updated</b>
+  <div class="meta">${esc(msg)} — this list may be old. <a href="#" onclick="go('set');return false" style="color:var(--brand);font-weight:700">Settings</a></div></div>`; }
+const pinError = e => /pin/i.test(e.message);
 async function loadHistory(){
   const saved = S.get('hist', null);
   if (saved) renderHistory(saved);                       // instant: last saved copy, then refresh
   else $('hist').innerHTML = '<div class="empty"><span class="spin" style="border-color:rgba(0,0,0,.15);border-top-color:var(--brand)"></span>Loading…</div>';
   try{
     const j = await api({action:'history', pin:S.get('pin',''), by:(S.get('name','')||'').trim()});
-    S.set('hist', j.rows); renderHistory(j.rows);
-  }catch(e){ if(!saved) $('hist').innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+    S.set('hist', j.rows); renderHistory(j.rows);         // the sheet is the truth: rows deleted there disappear here
+  }catch(e){
+    if (pinError(e)) { S.set('hist', null); $('hist').innerHTML = staleBar(e.message); return; }
+    $('hist').innerHTML = staleBar(e.message) + (saved ? $('hist').innerHTML : '');
+  }
 }
 
 /* work + floor, without repeating the floor when the work text already has it */
@@ -512,7 +520,11 @@ async function loadNotices(manual){
     const j = await api({action:'notices', pin:S.get('pin',''), by:(S.get('name','')||'').trim()});
     notices = j.rows || []; S.set('notices', notices); renderNotices();
     if(manual) toast('Updated ✓');
-  }catch(e){ renderNotices(); if(manual) toast(e.message); }
+  }catch(e){
+    if (pinError(e)) { notices = []; S.set('notices', []); }
+    renderNotices(); $('notices').innerHTML = staleBar(e.message) + $('notices').innerHTML;
+    if(manual) toast(e.message);
+  }
 }
 function askSheet(title, text, yes){
   return new Promise(res=>{
